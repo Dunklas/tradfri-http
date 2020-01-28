@@ -1,5 +1,8 @@
 package com.github.tradfrihttp.tradfricoaps;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tradfrihttp.tradfricoaps.model.LightGroupIkea;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.Request;
@@ -9,14 +12,13 @@ import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.eclipse.californium.scandium.DTLSConnector;
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 import org.eclipse.californium.scandium.dtls.pskstore.StaticPskStore;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,9 @@ import java.util.List;
 import com.github.tradfrihttp.model.LightGroup;
 
 @Component
-public class TradfriCoapClient implements TradfriCoapApi {
+public class TradfriCoapsClient implements TradfriCoapsApi {
+
+    private Logger LOG = LoggerFactory.getLogger(TradfriCoapsClient.class.getCanonicalName());
 
     private static final String GROUPS_ENDPOINT = "/15004";
 
@@ -62,49 +66,37 @@ public class TradfriCoapClient implements TradfriCoapApi {
     public List<LightGroup> getGroups() {
         Request req = new Request(CoAP.Code.GET);
         req.setURI(String.format("coap://%s:%s%s", gatewayIp, gatewayPort, GROUPS_ENDPOINT));
-        JSONArray groupIds;
+        List<LightGroup> lightGroups = new ArrayList<>();
         try {
             coapEndpoint.sendRequest(req);
             Response response = req.waitForResponse();
-            groupIds = (JSONArray) new JSONParser().parse(response.getPayloadString());
-        } catch (InterruptedException| ParseException ie) {
-            System.out.println("ERROR!!" + ie.getMessage());
+            List<Integer> groupIds = new ObjectMapper().readValue(response.getPayload(), new TypeReference<List<Integer>>() {});
+            for (Integer groupId : groupIds) {
+                LightGroup lightGroup = getGroup(groupId);
+                if (lightGroup != null) {
+                    lightGroups.add(lightGroup);
+                } else {
+                    LOG.warn(String.format("Could not fetch group with id: %d", groupId));
+                }
+            }
+        } catch (InterruptedException|IOException ie) {
+            LOG.error("An exception occurred while retrieving groups: ", ie);
             return new ArrayList<>();
-        }
-
-        List<LightGroup> lightGroups = new ArrayList<>();
-        for (Object obj : groupIds) {
-            Long groupId = (Long) obj;
-            LightGroup group = getGroup(groupId);
-            lightGroups.add(group);
         }
         return lightGroups;
     }
 
     @Override
-    public LightGroup getGroup(long groupId) {
+    public LightGroup getGroup(int groupId) {
         Request req = new Request(CoAP.Code.GET);
         req.setURI(String.format("coap://%s:%s%s/%d", gatewayIp, gatewayPort, GROUPS_ENDPOINT, groupId));
         try {
             coapEndpoint.sendRequest(req);
             Response response = req.waitForResponse();
-            JSONObject groupJson = (JSONObject) new JSONParser().parse(response.getPayloadString());
-            LightGroup.Builder lightGroup = new LightGroup.Builder()
-                    .setId((Long) groupJson.get("9003"))
-                    .setName((String) groupJson.get("9001"));
-            List<Long> lightBulbs = new ArrayList<>();
-            JSONObject someNestedThing = (JSONObject) groupJson.get("9018");
-            JSONObject someOtherNestedThing = (JSONObject) someNestedThing.get("15002");
-            for (Object lightBulbObj : (JSONArray) someOtherNestedThing.get("9003")) {
-                Long lightBulbId = (Long) lightBulbObj;
-                lightBulbs.add(lightBulbId);
-            }
-            lightGroup.setLightBulbs(lightBulbs);
-            return lightGroup.build();
-
-
-        } catch (InterruptedException|ParseException e) {
-            System.out.println("ERROR!!" + e.getMessage());
+            return new ObjectMapper().readValue(response.getPayload(), LightGroupIkea.class)
+                    .toLightGroup();
+        } catch (InterruptedException|IOException ie) {
+            LOG.error("An exception occurred while retrieving group: ", ie);
             return null;
         }
     }

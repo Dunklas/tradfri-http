@@ -4,16 +4,16 @@ import java.util.List;
 
 public class LightGroup {
 
-    public Long id;
+    public int id;
     public String name;
-    public List<Long> lightBulbs;
+    public List<Integer> lightBulbs;
 
     public static class Builder {
-        private Long id;
+        private int id;
         private String name;
-        private List<Long> lightBulbs;
+        private List<Integer> lightBulbs;
 
-        public Builder setId(Long id) {
+        public Builder setId(int id) {
             this.id = id;
             return this;
         }
@@ -23,7 +23,7 @@ public class LightGroup {
             return this;
         }
 
-        public Builder setLightBulbs(List<Long> lightBulbs) {
+        public Builder setLightBulbs(List<Integer> lightBulbs) {
             this.lightBulbs = lightBulbs;
             return this;
         }

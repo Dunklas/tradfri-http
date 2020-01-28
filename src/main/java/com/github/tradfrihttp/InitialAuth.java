@@ -1,5 +1,8 @@
 package com.github.tradfrihttp;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.straylightlabs.hola.dns.Domain;
 import net.straylightlabs.hola.sd.Instance;
 import net.straylightlabs.hola.sd.Query;
@@ -13,9 +16,8 @@ import org.eclipse.californium.core.network.config.NetworkConfig;
 import org.eclipse.californium.scandium.DTLSConnector;
 import org.eclipse.californium.scandium.config.DtlsConnectorConfig;
 import org.eclipse.californium.scandium.dtls.pskstore.StaticPskStore;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,11 +26,13 @@ import java.util.Set;
 
 public class InitialAuth {
 
+    public static Logger LOG = LoggerFactory.getLogger(InitialAuth.class.getCanonicalName());
+
     public static final String AUTH_ENDPOINT = "/15011/9063";
 
     public static void main(String[] args) {
         if (args.length != 2) {
-            System.out.printf("Usage: ./InitialAuth CLIENT_ID PSK\n");
+            LOG.warn("Usage: ./InitialAuth CLIENT_ID PSK");
             System.exit(0);
         }
 
@@ -37,7 +41,7 @@ public class InitialAuth {
 
         InetSocketAddress gatewayAddress = findGateway();
         if (gatewayAddress == null) {
-            System.err.printf("No IKEA trådfri gateway found.");
+            LOG.error("No IKEA trådfri gateway found.");
             System.exit(1);
         }
         doInitialAuth(gatewayAddress, clientId, psk);
@@ -69,17 +73,17 @@ public class InitialAuth {
     }
 
     private static void printGatewayInfo(InetSocketAddress address, Instance instance) {
-        System.out.print("Found IKEA trådfri gateway\n");
-        System.out.printf("Host: %s\n", address.getHostName());
-        System.out.printf("Port: %d\n", address.getPort());
+        LOG.info("Found IKEA trådfri gateway");
+        LOG.info(String.format("Host: %s", address.getHostName()));
+        LOG.info(String.format("Port: %d", address.getPort()));
         String version = instance.lookupAttribute("version");
         if (version != null && !version.equals("")) {
-            System.out.printf("Firmware: %s\n", version);
+            LOG.info(String.format("Firmware: %s", version));
         }
     }
 
     private static void doInitialAuth(InetSocketAddress gatewayAddress, String clientId, String psk) {
-        System.out.printf("Doing initial auth.\nGateway: %s:%d\nClient-id: %s\nPSK: %s\n", gatewayAddress.getHostName(), gatewayAddress.getPort(), clientId, psk);
+        LOG.info(String.format("\nDoing initial auth.\nGateway: %s:%d\nClient-id: %s\nPSK: %s\n", gatewayAddress.getHostName(), gatewayAddress.getPort(), clientId, psk));
         StaticPskStore pskStore = new StaticPskStore("Client_identity", psk.getBytes());
         DtlsConnectorConfig config = new DtlsConnectorConfig.Builder()
                 .setAddress(new InetSocketAddress(0))
@@ -102,26 +106,36 @@ public class InitialAuth {
         try {
             endpoint.sendRequest(req);
             Response response = req.waitForResponse();
-            printAuthResponse(response.getPayloadString());
+            printAuthResponse(response.getPayload());
         } catch (InterruptedException e) {
-            System.out.println("No response");
+            LOG.error("No response from gateway");
             System.exit(1);
         }
         clientConnector.destroy();
     }
 
-    private static void printAuthResponse(String payload) {
-        if (payload == null || payload.trim().isEmpty()) {
-            System.out.println("No payload.");
-            return;
-        }
-        JSONObject jsonPayload;
+    private static void printAuthResponse(byte[] payload) {
         try {
-            jsonPayload = (JSONObject) new JSONParser().parse(payload);
-        } catch (ParseException pe) {
-            System.out.println("Malformed payload.");
-            return;
+            AuthResponse authResponse = new ObjectMapper().readValue(payload, AuthResponse.class);
+            LOG.info(String.format("Secret key: %s", authResponse.getSecretKey()));
+        } catch (IOException ie) {
+            LOG.error("Malformed or missing payload.");
+            System.exit(1);
         }
-        System.out.println("Secret key: " + jsonPayload.get("9091"));
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private static class AuthResponse {
+
+        private String secretKey;
+
+        @JsonSetter("9091")
+        public void setSecretKey(String secretKey) {
+            this.secretKey = secretKey;
+        }
+
+        public String getSecretKey() {
+            return this.secretKey;
+        }
     }
 }
