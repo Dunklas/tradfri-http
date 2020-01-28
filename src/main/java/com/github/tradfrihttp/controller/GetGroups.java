@@ -1,7 +1,7 @@
 package com.github.tradfrihttp.controller;
 
 import com.github.tradfrihttp.model.LightGroup;
-import com.github.tradfrihttp.tradfricoaps.TradfriCoapApi;
+import com.github.tradfrihttp.tradfricoaps.TradfriCoapsApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -13,7 +13,7 @@ import java.util.List;
 public class GetGroups {
 
     @Autowired
-    private TradfriCoapApi coapApi;
+    private TradfriCoapsApi coapApi;
 
     @GetMapping("/groups")
     @ResponseBody

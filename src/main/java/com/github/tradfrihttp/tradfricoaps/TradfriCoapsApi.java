@@ -4,9 +4,9 @@ import com.github.tradfrihttp.model.LightGroup;
 
 import java.util.List;
 
-public interface TradfriCoapApi {
+public interface TradfriCoapsApi {
 
     List<LightGroup> getGroups();
-    LightGroup getGroup(long groupId);
+    LightGroup getGroup(int groupId);
 
 }
