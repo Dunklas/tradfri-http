@@ -2,15 +2,15 @@ package com.github.tradfrihttp.model;
 
 public class LightBulb {
 
-    private int id;
-    private String name;
-    private String deviceTypeName;
-    private String deviceTypeId;
-    private boolean powerOn;
-    private int dimmer;
-    private int xColor;
-    private int yColor;
-    private String hexColor;
+    public int id;
+    public String name;
+    public String deviceTypeName;
+    public String deviceTypeId;
+    public boolean powerOn;
+    public int dimmer;
+    public int xColor;
+    public int yColor;
+    public String hexColor;
 
     private LightBulb() {}
 

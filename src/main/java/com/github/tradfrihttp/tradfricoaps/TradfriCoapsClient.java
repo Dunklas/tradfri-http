@@ -2,6 +2,8 @@ package com.github.tradfrihttp.tradfricoaps;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.tradfrihttp.model.LightBulb;
+import com.github.tradfrihttp.tradfricoaps.model.LightBulbIkea;
 import com.github.tradfrihttp.tradfricoaps.model.LightGroupIkea;
 import org.eclipse.californium.core.CoapClient;
 import org.eclipse.californium.core.coap.CoAP;
@@ -31,6 +33,7 @@ public class TradfriCoapsClient implements TradfriCoapsApi {
     private Logger LOG = LoggerFactory.getLogger(TradfriCoapsClient.class.getCanonicalName());
 
     private static final String GROUPS_ENDPOINT = "/15004";
+    private static final String LIGHTS_ENDPOINT = "/15001";
 
     @Value("${gateway-ip}")
     private String gatewayIp;
@@ -97,6 +100,21 @@ public class TradfriCoapsClient implements TradfriCoapsApi {
                     .toLightGroup();
         } catch (InterruptedException|IOException ie) {
             LOG.error("An exception occurred while retrieving group: ", ie);
+            return null;
+        }
+    }
+
+    @Override
+    public LightBulb getLight(int lightId) {
+        Request req = new Request(CoAP.Code.GET);
+        req.setURI(String.format("coap://%s:%s%s/%d", gatewayIp, gatewayPort, LIGHTS_ENDPOINT, lightId));
+        try {
+            coapEndpoint.sendRequest(req);
+            Response response = req.waitForResponse();
+            return new ObjectMapper().readValue(response.getPayload(), LightBulbIkea.class)
+                    .toLightBulb();
+        } catch (InterruptedException|IOException ie) {
+            LOG.error("An exception occurred while retrieving light: ", ie);
             return null;
         }
     }
