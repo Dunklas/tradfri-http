@@ -1,6 +1,5 @@
 package com.github.tradfrihttp.tradfricoaps.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 public class DeviceTypeMetaDataIkea {
