@@ -2,6 +2,7 @@ package com.github.tradfrihttp.controller;
 
 import com.github.tradfrihttp.model.LightGroup;
 import com.github.tradfrihttp.tradfricoaps.TradfriCoapsApi;
+import com.github.tradfrihttp.tradfricoaps.exceptions.TradfriCoapsApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +17,7 @@ public class GetGroup {
 
     @GetMapping("/groups/{id}")
     @ResponseBody
-    public LightGroup group(@PathVariable Integer id) {
+    public LightGroup group(@PathVariable Integer id) throws TradfriCoapsApiException {
         return coapApi.getGroup(id);
     }
 

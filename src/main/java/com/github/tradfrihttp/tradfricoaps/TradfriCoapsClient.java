@@ -3,6 +3,7 @@ package com.github.tradfrihttp.tradfricoaps;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tradfrihttp.model.LightBulb;
+import com.github.tradfrihttp.tradfricoaps.exceptions.TradfriCoapsApiException;
 import com.github.tradfrihttp.tradfricoaps.model.LightBulbIkea;
 import com.github.tradfrihttp.tradfricoaps.model.LightGroupIkea;
 import org.eclipse.californium.core.CoapClient;
@@ -45,6 +46,7 @@ public class TradfriCoapsClient implements TradfriCoapsApi {
     private String secretKey;
 
     private CoapEndpoint coapEndpoint;
+    private GroupsHandler groupsHandler;
 
     @PostConstruct
     private void init() {
@@ -63,49 +65,24 @@ public class TradfriCoapsClient implements TradfriCoapsApi {
                 .setNetworkConfig(NetworkConfig.getStandard())
                 .build();
         client.setEndpoint(coapEndpoint);
+
+        groupsHandler = new GroupsHandler(this.gatewayIp, this.gatewayPort);
     }
 
     @Override
-    public List<LightGroup> getGroups() {
+    public List<LightGroup> getGroups() throws TradfriCoapsApiException {
         Request req = new Request(CoAP.Code.GET);
-        req.setURI(String.format("coap://%s:%s%s", gatewayIp, gatewayPort, GROUPS_ENDPOINT));
-        List<LightGroup> lightGroups = new ArrayList<>();
-        try {
-            coapEndpoint.sendRequest(req);
-            Response response = req.waitForResponse();
-            List<Integer> groupIds = new ObjectMapper().readValue(response.getPayload(), new TypeReference<List<Integer>>() {});
-            for (Integer groupId : groupIds) {
-                LightGroup lightGroup = getGroup(groupId);
-                if (lightGroup != null) {
-                    lightGroups.add(lightGroup);
-                } else {
-                    LOG.warn(String.format("Could not fetch group with id: %d", groupId));
-                }
-            }
-        } catch (InterruptedException|IOException ie) {
-            LOG.error("An exception occurred while retrieving groups: ", ie);
-            return new ArrayList<>();
-        }
-        return lightGroups;
+        return groupsHandler.handleGetGroups(coapEndpoint, req);
     }
 
     @Override
-    public LightGroup getGroup(int groupId) {
-        Request req = new Request(CoAP.Code.GET);
-        req.setURI(String.format("coap://%s:%s%s/%d", gatewayIp, gatewayPort, GROUPS_ENDPOINT, groupId));
-        try {
-            coapEndpoint.sendRequest(req);
-            Response response = req.waitForResponse();
-            return new ObjectMapper().readValue(response.getPayload(), LightGroupIkea.class)
-                    .toLightGroup();
-        } catch (InterruptedException|IOException ie) {
-            LOG.error("An exception occurred while retrieving group: ", ie);
-            return null;
-        }
+    public LightGroup getGroup(int groupId) throws TradfriCoapsApiException {
+        Request req = Request.newGet();
+        return groupsHandler.handleGetGroup(coapEndpoint, req, groupId);
     }
 
     @Override
-    public LightBulb getLight(int lightId) {
+    public LightBulb getLight(int lightId) throws TradfriCoapsApiException {
         Request req = new Request(CoAP.Code.GET);
         req.setURI(String.format("coap://%s:%s%s/%d", gatewayIp, gatewayPort, LIGHTS_ENDPOINT, lightId));
         try {
