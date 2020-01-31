@@ -2,6 +2,7 @@ package com.github.tradfrihttp.controller;
 
 import com.github.tradfrihttp.model.LightBulb;
 import com.github.tradfrihttp.tradfricoaps.TradfriCoapsApi;
+import com.github.tradfrihttp.tradfricoaps.exceptions.TradfriCoapsApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,7 +17,7 @@ public class GetLight {
 
     @GetMapping("/lights/{id}")
     @ResponseBody
-    public LightBulb light(@PathVariable Integer id) {
+    public LightBulb light(@PathVariable Integer id) throws TradfriCoapsApiException {
         return coapApi.getLight(id);
     }
 
