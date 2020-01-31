@@ -19,6 +19,7 @@ public class GroupsHandlerTest {
 
     @Mock
     private CoapsClient client;
+
     private GroupsHandler groupsHandler;
 
     @Test
