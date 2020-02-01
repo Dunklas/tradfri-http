@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tradfrihttp.model.LightGroup;
 import com.github.tradfrihttp.tradfricoaps.exceptions.TradfriCoapsApiException;
 import com.github.tradfrihttp.tradfricoaps.model.LightGroupIkea;
+import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,9 @@ class GroupsHandler {
         } catch (InterruptedException ie) {
             throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        if (!response.getCode().equals(CoAP.ResponseCode.CONTENT)) {
+            throw new TradfriCoapsApiException(String.format("Unexpected status code from gateway: %s", response.getCode()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         try {
             return new ObjectMapper().readValue(response.getPayload(), new TypeReference<List<Integer>>() {});
         } catch (IOException ie) {
@@ -51,6 +55,12 @@ class GroupsHandler {
             response = coapsClient.get(uri);
         } catch (InterruptedException ie) {
             throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        if (response.getCode().equals(CoAP.ResponseCode.NOT_FOUND)) {
+            throw new TradfriCoapsApiException(String.format("Group with id \"%d\" not found", groupId), HttpStatus.NOT_FOUND);
+        }
+        if (!response.getCode().equals(CoAP.ResponseCode.CONTENT)) {
+            throw new TradfriCoapsApiException(String.format("Unexpected status code from gateway: %s", response.getCode()), HttpStatus.INTERNAL_SERVER_ERROR);
         }
         try {
             return new ObjectMapper().readValue(response.getPayload(), LightGroupIkea.class)
