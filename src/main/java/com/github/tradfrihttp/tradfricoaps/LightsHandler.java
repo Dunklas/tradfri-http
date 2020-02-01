@@ -38,6 +38,12 @@ public class LightsHandler {
         } catch (InterruptedException ie) {
             throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        if (response.getCode().equals(CoAP.ResponseCode.NOT_FOUND)) {
+            throw new TradfriCoapsApiException(String.format("Light with id \"%d\" not found", id), HttpStatus.NOT_FOUND);
+        }
+        if (!response.getCode().equals(CoAP.ResponseCode.CONTENT)) {
+            throw new TradfriCoapsApiException(String.format("Unexpected status code from gateway: %s", response.getCode()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         try {
             return new ObjectMapper().readValue(response.getPayload(), LightBulbIkea.class)
                     .toLightBulb();
