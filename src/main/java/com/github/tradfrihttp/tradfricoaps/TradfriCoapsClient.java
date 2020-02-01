@@ -56,4 +56,9 @@ public class TradfriCoapsClient implements TradfriCoapsApi {
     public LightBulb getLight(int lightId) throws TradfriCoapsApiException {
         return lightsHandler.handleGetLight(lightId);
     }
+
+    @Override
+    public LightBulb putLight(int lightId, boolean powerOn, int dimmer) throws TradfriCoapsApiException {
+        return lightsHandler.handlePutLight(lightId, powerOn, dimmer);
+    }
 }

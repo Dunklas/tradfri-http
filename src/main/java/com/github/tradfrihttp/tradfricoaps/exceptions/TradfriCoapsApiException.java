@@ -1,16 +1,22 @@
 package com.github.tradfrihttp.tradfricoaps.exceptions;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 public class TradfriCoapsApiException extends Exception {
 
-    public TradfriCoapsApiException(String message) {
+    private HttpStatus httpStatus;
+
+    public TradfriCoapsApiException(String message, HttpStatus httpStatus) {
         super(message);
+        this.httpStatus = httpStatus;
     }
 
-    public TradfriCoapsApiException(String message, Throwable cause) {
+    public TradfriCoapsApiException(String message, Throwable cause, HttpStatus httpStatus) {
         super(message, cause);
+        this.httpStatus = httpStatus;
+    }
+
+    public HttpStatus getHttpStatus() {
+        return httpStatus;
     }
 }
