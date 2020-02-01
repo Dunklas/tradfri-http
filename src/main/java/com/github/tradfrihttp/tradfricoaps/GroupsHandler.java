@@ -8,6 +8,7 @@ import com.github.tradfrihttp.tradfricoaps.model.LightGroupIkea;
 import org.eclipse.californium.core.coap.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,12 +35,12 @@ class GroupsHandler {
         try {
             response = coapsClient.get(uri);
         } catch (InterruptedException ie) {
-            throw new TradfriCoapsApiException("No response from: " + uri, ie);
+            throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         try {
             return new ObjectMapper().readValue(response.getPayload(), new TypeReference<List<Integer>>() {});
         } catch (IOException ie) {
-            throw new TradfriCoapsApiException("Could not parse payload", ie);
+            throw new TradfriCoapsApiException("Could not parse payload", ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -49,13 +50,13 @@ class GroupsHandler {
         try {
             response = coapsClient.get(uri);
         } catch (InterruptedException ie) {
-            throw new TradfriCoapsApiException("No response from: " + uri, ie);
+            throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
         try {
             return new ObjectMapper().readValue(response.getPayload(), LightGroupIkea.class)
                     .toLightGroup();
         } catch (IOException ie) {
-            throw new TradfriCoapsApiException("Could not parse payload", ie);
+            throw new TradfriCoapsApiException("Could not parse payload", ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

@@ -40,4 +40,12 @@ public class CoapsClient {
         coapEndpoint.sendRequest(request);
         return request.waitForResponse();
     }
+
+    Response put(String uri, String payload) throws InterruptedException {
+        Request request = new Request(CoAP.Code.PUT);
+        request.setURI(uri);
+        request.setPayload(payload);
+        coapEndpoint.sendRequest(request);
+        return request.waitForResponse();
+    }
 }
