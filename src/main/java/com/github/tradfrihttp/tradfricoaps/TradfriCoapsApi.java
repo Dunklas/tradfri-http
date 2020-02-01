@@ -10,7 +10,7 @@ public interface TradfriCoapsApi {
 
     List<LightGroup> getGroups() throws TradfriCoapsApiException;
     LightGroup getGroup(int groupId) throws TradfriCoapsApiException;
-    LightGroup setLightStateOfGroup(int groupId, boolean powerOn, int dimmer) throws TradfriCoapsApiException;
+    void setLightStateOfGroup(int groupId, boolean powerOn, int dimmer) throws TradfriCoapsApiException;
     LightBulb getLight(int lightId) throws TradfriCoapsApiException;
-    LightBulb putLight(int lightId, boolean powerOn, int dimmer) throws TradfriCoapsApiException;
+    void putLight(int lightId, boolean powerOn, int dimmer) throws TradfriCoapsApiException;
 }

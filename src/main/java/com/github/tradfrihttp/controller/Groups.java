@@ -48,11 +48,12 @@ public class Groups {
 
     @PostMapping("/groups/{id}")
     @ResponseBody
-    public ResponseEntity<LightGroup> setGroup(@PathVariable Integer id, @RequestBody PostLightRequest request) {
+    public ResponseEntity<Void> setGroup(@PathVariable Integer id, @RequestBody PostLightRequest request) {
         try {
+            coapApi.setLightStateOfGroup(id, request.powerOn, request.dimmer);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(coapApi.setLightStateOfGroup(id, request.powerOn, request.dimmer));
+                    .build();
         } catch (TradfriCoapsApiException tcai) {
             return ResponseEntity
                     .status(tcai.getHttpStatus())

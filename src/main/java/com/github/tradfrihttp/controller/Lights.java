@@ -31,11 +31,12 @@ public class Lights {
 
     @PostMapping("/lights/{id}")
     @ResponseBody
-    public ResponseEntity<LightBulb> light(@PathVariable Integer id, @RequestBody PostLightRequest request) {
+    public ResponseEntity<Void> light(@PathVariable Integer id, @RequestBody PostLightRequest request) {
         try {
+            coapsApi.putLight(id, request.powerOn, request.dimmer);
             return ResponseEntity
                     .status(HttpStatus.OK)
-                    .body(coapsApi.putLight(id, request.powerOn, request.dimmer));
+                    .build();
         } catch (TradfriCoapsApiException tcai) {
             return ResponseEntity
                     .status(tcai.getHttpStatus())

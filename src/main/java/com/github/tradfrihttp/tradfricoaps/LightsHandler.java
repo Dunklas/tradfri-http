@@ -6,6 +6,7 @@ import com.github.tradfrihttp.model.LightBulb;
 import com.github.tradfrihttp.tradfricoaps.exceptions.TradfriCoapsApiException;
 import com.github.tradfrihttp.tradfricoaps.model.LightBulbIkea;
 import com.github.tradfrihttp.tradfricoaps.model.PutLightPayload;
+import org.eclipse.californium.core.coap.CoAP;
 import org.eclipse.californium.core.coap.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +47,9 @@ public class LightsHandler {
         }
     }
 
-    LightBulb handlePutLight(int id, boolean powerOn, int dimmer) throws TradfriCoapsApiException {
+    void handlePutLight(int id, boolean powerOn, int dimmer) throws TradfriCoapsApiException {
         if (!isValidPutLightRequest(dimmer)) {
-            throw new TradfriCoapsApiException(String.format("Invalid request: %d", dimmer), HttpStatus.BAD_REQUEST);
+            throw new TradfriCoapsApiException(String.format("Invalid request data: %b, %d", powerOn, dimmer), HttpStatus.BAD_REQUEST);
         }
         String uri = String.format("coap://%s:%s%s/%d", gatewayIp, gatewayPort, LIGHTS_ENDPOINT, id);
         PutLightPayload payloadContent = new PutLightPayload(powerOn, dimmer);
@@ -65,8 +66,9 @@ public class LightsHandler {
         } catch (InterruptedException ie) {
             throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        LOG.info("Response: " + response.getPayloadString());
-        return null;
+        if (!response.getCode().equals(CoAP.ResponseCode.CHANGED)) {
+            throw new TradfriCoapsApiException(String.format("Unexpected status code from gateway: %s", response.getCode()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
     private boolean isValidPutLightRequest(int dimmer) {
