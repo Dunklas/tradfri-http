@@ -53,16 +53,16 @@ public class TradfriCoapsClient implements TradfriCoapsApi {
     }
 
     @Override
-    public void setLightStateOfGroup(int groupId, boolean powerOn, int dimmer) throws TradfriCoapsApiException {
+    public LightBulb getLight(int lightId) throws TradfriCoapsApiException {
+        return lightsHandler.handleGetLight(lightId);
+    }
+
+    @Override
+    public void putLightForGroup(int groupId, boolean powerOn, int dimmer) throws TradfriCoapsApiException {
         LightGroup group = groupsHandler.handleGetGroup(groupId);
         for (Integer lightId : group.lightBulbs) {
             putLight(lightId, powerOn, dimmer);
         }
-    }
-
-    @Override
-    public LightBulb getLight(int lightId) throws TradfriCoapsApiException {
-        return lightsHandler.handleGetLight(lightId);
     }
 
     @Override

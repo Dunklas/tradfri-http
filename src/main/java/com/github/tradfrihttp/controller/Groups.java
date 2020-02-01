@@ -4,7 +4,6 @@ import com.github.tradfrihttp.model.LightGroup;
 import com.github.tradfrihttp.model.PostLightRequest;
 import com.github.tradfrihttp.tradfricoaps.TradfriCoapsApi;
 import com.github.tradfrihttp.tradfricoaps.exceptions.TradfriCoapsApiException;
-import org.eclipse.californium.core.coap.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +49,7 @@ public class Groups {
     @ResponseBody
     public ResponseEntity<Void> setGroup(@PathVariable Integer id, @RequestBody PostLightRequest request) {
         try {
-            coapApi.setLightStateOfGroup(id, request.powerOn, request.dimmer);
+            coapApi.putLightForGroup(id, request.powerOn, request.dimmer);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .build();
