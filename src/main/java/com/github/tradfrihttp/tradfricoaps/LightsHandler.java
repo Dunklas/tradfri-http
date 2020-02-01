@@ -35,7 +35,6 @@ public class LightsHandler {
         Response response;
         try {
             response = coapsClient.get(uri);
-            LOG.info(response.getPayloadString());
         } catch (InterruptedException ie) {
             throw new TradfriCoapsApiException("No response from: " + uri, ie, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -59,7 +58,6 @@ public class LightsHandler {
         } catch (JsonProcessingException jpe) {
             throw new TradfriCoapsApiException("Could not create request payload", jpe, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        LOG.info("Payload" + payload);
         Response response;
         try {
             response = coapsClient.put(uri, payload);
